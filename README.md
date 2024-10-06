@@ -15,10 +15,13 @@
 
 RoseNNa is a fast, portable, and minimally-intrusive library for neural network inference.
 It can run inference on neural networks in [ONNX](https://onnx.ai/) format, which is universal and can be used with PyTorch, TensorFlow, Keras, and more.
-RoseNNa's intended use case is large Fortran- and C-based HPC codebases. 
-It currently supports RNNs, CNNs, and MLPs.
-The library is optimized Fortran and outperforms PyTorch (by a factor between 2 and 5x) for the relatively small neural networks used in physics applications, like CFD.
-It is described in detail in the following manuscript: <a href="http://arxiv.org/abs/2307.16322">A. Bati, S. H. Bryngelson (2024) Comp. Phys. Comm., 296, 109052.</a>.
+__RoseNNa's intended use case is embedding neural networks in Fortran- and C-based HPC codebases.__
+One compiles RoseNNa and links it to an existing PDE (e.g., CFD) solver written in C or Fortran.
+You can then evaluate your neural network from the PDE solver at Fortran/C speeds.
+
+RoseNNa currently supports RNNs, CNNs, and MLPs.
+The library is optimized Fortran and outperforms PyTorch (by a factor between 2 and 5x) for the relatively small neural networks used in physics applications, like computational fluid dynamics.
+RoseNNa is described in detail in <a href="http://arxiv.org/abs/2307.16322">A. Bati, S. H. Bryngelson (2024) Comp. Phys. Comm., 296, 109052.</a>.
 
 ## Hello RoseNNa
 
@@ -55,12 +58,12 @@ First, `cd` into the `fLibrary/` directory.
 
 Then, create PyTorch model and convert to ONNX:
 ``` bash
-python3 ../goldenFiles/gemm_small/gemm_small.py
+python ../goldenFiles/gemm_small/gemm_small.py
 ```
 
 Read and interpret the corresponding output files from the last step via
 ``` bash
-python3 modelParserONNX.py -w ../goldenFiles/gemm_small/gemm_small.onnx -f ../goldenFiles/gemm_small/gemm_small_weights.onnx
+python modelParserONNX.py -w ../goldenFiles/gemm_small/gemm_small.onnx -f ../goldenFiles/gemm_small/gemm_small_weights.onnx
 ```
 and compile the library
 ``` bash
@@ -75,7 +78,7 @@ gfortran -o flibrary libcorelib.a capiTester.o
 ```
 and finally check if the output from PyTorch model matches roseNNa's output
 ``` bash
-python3 ../test/testChecker.py gemm_small
+python ../test/testChecker.py gemm_small
 ```
 
 ## Compiling roseNNa 
@@ -119,11 +122,11 @@ torch.onnx.export(model,               # model being run
 
 3. **Preprocess the model**
 
-    `fLibrary/` holds the library files that recreate and run inference on the model. Run `python3 modelParserONNX.py -f path/to/model/structure -w path/to/weights/file` to reconstruct the model.
+`fLibrary/` holds the library files that recreate and run inference on the model. Run `python modelParserONNX.py -f path/to/model/structure -w path/to/weights/file` to reconstruct the model.
 
 4. **Compiling the library**
 
-    Then, in the same `/fLibrary` directory, run `make library`. This compiles the library into `libcorelib.a`, which is required to link other `*.o` files with the library. This library file is now ready to be integrated into any Fortran/C workflow.
+Then, in the same `/fLibrary` directory, run `make library`. This compiles the library into `libcorelib.a`, which is required to link other `*.o` files with the library. This library file is now ready to be integrated into any Fortran/C workflow.
 
 ## Fortran use
 
@@ -137,8 +140,8 @@ gfortran -o flibrary path/to/libcorelib.a *.o
 
 ## C use
 
-One can call roseNNA from C painlessly. 
-Compile the library, then use the following C program as an example:
+One can readily call roseNNa from C. 
+Compile roseNNa, then use the following C program as an example:
 ```c
 void use_model(double * i0, double * o0);
 void initialize(char * model_file, char * weights_file);
